@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Data to Master Node</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+
+<h2>Upload Files and Code</h2>
+
+<!-- Поле для загрузки файлов данных -->
+<label for="fileInput">Select data files:</label>
+<input type="file" id="fileInput" multiple>
+<br><br>
+
+<!-- Поле для загрузки файла с кодом -->
+<label for="codeFileInput">Select code file:</label>
+<input type="file" id="codeFileInput">
+<br><br>
+
+<!-- Кнопка для отправки данных -->
+<button onclick="uploadData()">Upload to Master Node</button>
