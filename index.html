@@ -8,6 +8,39 @@
 
         function setUser() {
             const userName = document.getElementById('userNameInput').value;
+
+            // Проверяем, что поле не пустое
+            if (!userName) {
+                alert("Пожалуйста, введите фамилию.");
+                return;
+            }
+
+            // Замените 'http://<IP_ADDRESS>:5000' на ваш IP-адрес
+            const url = 'http://95.165.10.162:5000/submit';
+
+            // Отправляем POST-запрос на сервер
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ surname: userName }),
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error('Network response was not ok.');
+            })
+            .then(data => {
+                console.log('Успех:', data);
+                alert('фамилия отправлена!');
+            })
+            .catch((error) => {
+                console.error('Ошибка:', error);
+                alert('Произошла ошибка при отправке фамилии.');
+            });
+
             document.getElementById('userLabel').innerText = `Пользователь: ${userName}`;
             document.getElementById('firstBox').classList.add('hidden');
             document.getElementById('secondBox').classList.remove('hidden');
