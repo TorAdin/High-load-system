@@ -1,0 +1,94 @@
+<html>
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        function showResultButton() {
+            document.getElementById('resultButton').classList.remove('hidden');
+        }
+
+        function setUser() {
+            const userName = document.getElementById('userNameInput').value;
+            document.getElementById('userLabel').innerText = `Пользователь: ${userName}`;
+            document.getElementById('firstBox').classList.add('hidden');
+            document.getElementById('secondBox').classList.remove('hidden');
+        }
+
+        function showCreateTask() {
+            document.getElementById('secondBox').classList.add('hidden');
+            document.getElementById('thirdBox').classList.remove('hidden');
+        }
+
+        function showTaskList() {
+            document.getElementById('thirdBox').classList.add('hidden');
+            document.getElementById('secondBox').classList.remove('hidden');
+        }
+
+        function showTaskResult() {
+            document.getElementById('secondBox').classList.add('hidden');
+            document.getElementById('fourthBox').classList.remove('hidden');
+        }
+
+        function backToTaskList() {
+            document.getElementById('fourthBox').classList.add('hidden');
+            document.getElementById('secondBox').classList.remove('hidden');
+        }
+
+        function logout() {
+            document.getElementById('secondBox').classList.add('hidden');
+            document.getElementById('firstBox').classList.remove('hidden');
+        }
+    </script>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+    <!-- First Box -->
+    <div id="firstBox" class="border border-gray-300 p-6 mb-8 bg-white rounded-lg shadow-md">
+        <div class="mb-4">
+            <label class="block mb-2 text-gray-700">Введите фамилию</label>
+            <input type="text" id="userNameInput" class="border border-gray-300 p-2 rounded-lg w-full">
+        </div>
+        <div class="flex justify-center">
+            <button class="border border-green-500 text-green-500 px-4 py-2 rounded-lg hover:bg-green-500 hover:text-white transition" onclick="setUser()">Ввод</button>
+        </div>
+    </div>
+
+    <!-- Second Box -->
+    <div id="secondBox" class="border border-gray-300 p-6 mb-8 bg-white rounded-lg shadow-md hidden">
+        <div class="mb-4 bg-blue-100 p-2 rounded-lg">
+            <label id="userLabel" class="block text-gray-700">Пользователь: </label>
+        </div>
+        <div class="mb-4">
+            <label class="block mb-2 text-gray-700">Ваши задачи</label>
+            <div class="border border-gray-300 p-2 rounded-lg cursor-pointer hover:bg-gray-100 transition" onclick="showTaskResult()">Задача 1</div>
+        </div>
+        <div class="flex justify-between space-x-4">
+            <button class="border border-red-500 text-red-500 px-4 py-2 rounded-lg hover:bg-red-500 hover:text-white transition" onclick="logout()">Выйти</button>
+            <button class="border border-green-500 text-green-500 px-4 py-2 rounded-lg hover:bg-green-500 hover:text-white transition" onclick="showCreateTask()">Создать задачу</button>
+        </div>
+    </div>
+
+    <!-- Third Box -->
+    <div id="thirdBox" class="border border-gray-300 p-6 mb-8 bg-white rounded-lg shadow-md hidden">
+        <div class="mb-4">
+            <label class="block mb-2 text-gray-700">Название задачи</label>
+            <input type="text" class="border border-gray-300 p-2 rounded-lg w-full">
+        </div>
+        <div class="mb-4">
+            <label class="block mb-2 text-gray-700">Исходные данные</label>
+            <input type="file" multiple class="border border-gray-300 px-4 py-2 rounded-lg w-full">
+        </div>
+        <div class="flex justify-between space-x-4">
+            <button class="border border-blue-500 text-blue-500 px-4 py-2 rounded-lg hover:bg-blue-500 hover:text-white transition" onclick="showTaskList()">Вернуться к списку задач</button>
+            <button class="border border-green-500 text-green-500 px-4 py-2 rounded-lg hover:bg-green-500 hover:text-white transition">Отправить</button>
+        </div>
+    </div>
+
+    <!-- Fourth Box -->
+    <div id="fourthBox" class="border border-gray-300 p-6 bg-white rounded-lg shadow-md hidden">
+        <div class="mb-4">
+            <label class="block mb-2 text-gray-700">Задача 1</label>
+            <button id="resultButton" class="border border-green-500 text-green-500 px-4 py-2 rounded-lg hover:bg-green-500 hover:text-white transition mb-4">Получить результат</button>
+        </div>
+        <button class="border border-blue-500 text-blue-500 px-4 py-2 rounded-lg hover:bg-blue-500 hover:text-white transition" onclick="backToTaskList()">Вернуться к списку задач</button>
+    </div>
+</body>
+</html>
