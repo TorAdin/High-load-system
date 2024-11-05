@@ -35,7 +35,11 @@
             .then(data => {
                 console.log('Успех:', data);
                 alert('фамилия отправлена!');
+
+                showTasks();
             })
+
+
             .catch((error) => {
                 console.error('Ошибка:', error);
                 alert('Произошла ошибка при отправке фамилии.');
