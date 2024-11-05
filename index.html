@@ -56,6 +56,52 @@
             document.getElementById('secondBox').classList.remove('hidden');
         }
 
+        function showTasks() {
+            const userName = document.getElementById('userNameInput').value;
+
+            // Проверяем, что поле не пустое
+            if (!userName) {
+                alert("Пожалуйста, введите фамилию.");
+                return;
+            }
+
+            const url = 'http://95.165.10.162:5000/tasks'; // URL вашего Flask сервера
+
+            // Отправляем POST-запрос на сервер
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ surname: userName }),
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error('Network response was not ok.');
+            })
+            .then(data => {
+                const tasksContainer = document.getElementById('tasksContainer');
+                tasksContainer.innerHTML = ''; // Очищаем предыдущие задачи
+
+                // Проверяем, есть ли задачи для данной фамилии
+                if (data.length === 0) {
+                    tasksContainer.innerHTML = '<p>Нет задач для этой фамилии.</p>';
+                } else {
+                    data.forEach(task => {
+                        const taskElement = document.createElement('p');
+                        taskElement.innerText = task.task; // Устанавливаем текст задачи
+                        tasksContainer.appendChild(taskElement); // Добавляем задачу в контейнер
+                    });
+                }
+            })
+            .catch((error) => {
+                console.error('Ошибка:', error);
+                alert('Произошла ошибка при получении задач.');
+            });
+        }
+
         function showTaskResult() {
             document.getElementById('secondBox').classList.add('hidden');
             document.getElementById('fourthBox').classList.remove('hidden');
@@ -87,11 +133,11 @@
     <!-- Second Box -->
     <div id="secondBox" class="border border-gray-300 p-6 mb-8 bg-white rounded-lg shadow-md hidden">
         <div class="mb-4 bg-blue-100 p-2 rounded-lg">
-            <label id="userLabel" class="block text-gray-700">Пользователь: </label>
+            <label id="userLabel" class="block text-gray-700">Пользователь: <span id="userName"></span> </label>
         </div>
         <div class="mb-4">
             <label class="block mb-2 text-gray-700">Ваши задачи</label>
-            <div class="border border-gray-300 p-2 rounded-lg cursor-pointer hover:bg-gray-100 transition" onclick="showTaskResult()">Задача 1</div>
+            <div id="taskList" class="border border-gray-300 p-2 rounded-lg cursor-pointer hover:bg-gray-100 transition" onclick="showTaskResult()">Задача 1</div>
         </div>
         <div class="flex justify-between space-x-4">
             <button class="border border-red-500 text-red-500 px-4 py-2 rounded-lg hover:bg-red-500 hover:text-white transition" onclick="logout()">Выйти</button>
