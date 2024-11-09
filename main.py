@@ -1,6 +1,6 @@
 import queue
 
-
+#класс вычислительной ноды
 class CalcNode:
     def __init__(self, id, busy):
         self.id = id
