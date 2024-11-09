@@ -10,6 +10,7 @@ Task = Task()
 QueueTask = QueueTask()
 
 
+
 class NodeCommunication:
     def __init__(self, master_url, node_id):
         self.master_url = master_url
