@@ -2,150 +2,136 @@ import asyncio
 import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-import psycopg2
-from psycopg2.extras import RealDictCursor
+from websockets import connect, WebSocketClientProtocol
 
 
 class Scheduler:
     def push_single_node_state(self, node_id, state):
         pass
 
-    def get_distribute_tasks(self, tasks):
-        # Логика для распределения задач по узлам
+    def push_task(self, node_task_id):
+        pass
+
+    def get_distribute_tasks(self):
         pass
 
 
 class DB:
-    def __init__(self, db_name, user, password, host="localhost", port=5432):
-        """Инициализация соединения с бд"""
-        self.connection = psycopg2.connect(
-            dbname=db_name,
-            user=user,
-            password=password,
-            host=host,
-            port=port
-        )
-        self.connection.autocommit = True
-        self.cursor = self.connection.cursor(cursor_factory=RealDictCursor)
+    def __init__(self):
+        self.tasks = {}  # Таблица задач
+        self.user_tasks = {}  # Таблица пользовательских задач
 
-    def get_task(self, task_id):
-        """Получает информацию о задаче и связанных строках из базы данных по ее ID."""
-        # Запрос на получение основной информации задачи по ID
-        task_query = f"select id, data_id from tasks where id == {task_id}"
-        self.cursor.execute(task_query, (task_id,))
-        id_ = self.cursor.fetchone()
+    def create_user_task(self, command):
+        pass
 
-        if id_ is None:
-            print(f"Задача с ID {task_id} не найдена.")
-            return None
+    def create_node_task(self, user_task_id, data):
+        pass
 
-        # Запрос для получения данных, связанных с этой задачей
-        related_data_query = f"select idd_ from task_data where id == {task_id}"
-        self.cursor.execute(related_data_query, (task_id,))
-        related_data = self.cursor.fetchall()
+    def update_node_task_result(self, node_task_id, result):
+        pass
 
-        # Формируем результат - (related_data - массив из айдишников подмассивов, относящихся к task_id
-        result = {
-            "task_id": id_,
-            "related_data": related_data
+    def set_node_for_task(self, node_task_id, node_id):
+        '''
+        {
+            "node_task_id": int,
+            "command": text,
+            "data": []?
         }
-        return result
-
-    def update_task_result(self, task_id, data_id, result):
-        """Обновляет результат выполнения задачи в базе данных."""
-        update_query = f"update tasks set result = result where id == task_id and ddi == {data_id}"
-        self.cursor.execute(update_query, (result, task_id))
-        print(f"Задача {task_id} обновлена с результатом: {result}")
-
-    def close(self):
-        """Закрывает соединение с базой данных."""
-        self.cursor.close()
-        self.connection.close()
+        '''
+        pass
 
 
-class Master:
+class Master():
     def __init__(self, scheduler, db, node_ips):
+        self.tasks = []  # Список задач для распределения
         self.node_ips = node_ips  # Список IP-адресов нод
         self.scheduler = scheduler  # Экземпляр класса Scheduler
         self.db = db  # Экземпляр класса DB
-        self.node_connections = {}  # Соединения TCP для каждого узла
+        self.node_connections = {}  # Соединения WebSocket для каждого узла
+        asyncio.run(self.establish_connections())  # Устанавливаем соединения с узлами
 
     async def establish_connections(self):
-        """Устанавливает TCP соединения со всеми узлами и запускает слушатель."""
+        """Устанавливает соединение WebSocket со всеми узлами и запускает слушатель."""
         for node_id, node_ip in self.node_ips.items():
-            reader, writer = await asyncio.open_connection(node_ip, 8080)
-            self.node_connections[node_id] = (reader, writer)
-            asyncio.create_task(self.listen_to_node(node_id, reader))
-            print(f"Установлено TCP соединение с узлом {node_id} ({node_ip})")
+            websocket = await connect(f"ws://{node_ip}:8080")
+            self.node_connections[node_id] = websocket
+            asyncio.create_task(self.listen_to_node(node_id, websocket))
+            print(f"Установлено соединение с узлом {node_id} ({node_ip})")
 
-    async def listen_to_node(self, node_id, reader):
-        """Непрерывно вычитывает сообщения из TCP сокета и обновляет состояние узла."""
-        while True:
-            try:
-                data = await reader.read(1024)
-                if not data:
-                    break  # Соединение закрыто
-                message = json.loads(data.decode())
-                state = message.get("state")
-                if "done" in message:
-                    task_id = message["task_id"]
-                    result = message["result"]
-                    self.db.update_task_result(task_id, result)
-                    print(f"Задача {task_id} завершена на узле {node_id} с результатом: {result}")
-                else:
-                    self.scheduler.push_single_node_state(node_id, state)
-            except ConnectionResetError:
-                print(f"Соединение с узлом {node_id} потеряно.")
-                break
+    async def listen_to_node(self, node_id, websocket):
+        """Непрерывно вычитывает сообщения из WebSocket и обновляет состояние узла."""
+        try:
+            while True:
+                # async for message in websocket:
+                message = await websocket.recv()
+                data = json.loads(message)
+                message_type = data.get("type")
+                match message_type:
+                    case "result":
+                        results = data.get("results")
+                        for bam in results:
+                            task_id = bam.get("task_id")
+                            result = bam.get("result")
+                            self.db.update_node_task_result(task_id, result)
+                            print(f"Задача {task_id} завершена на узле {node_id} с результатом: {result}")
+                    case "status":
+                        state = data.get("state")
+                        self.scheduler.push_single_node_state(node_id, state)
+        except Exception as e:
+            print(f'{e=}')
+            await websocket.close()
 
     async def dispatch_task_to_node(self, node_id, task_data):
-        """Отправляет данные задачи узлу через установленное тисипи соединение"""
-        _, writer = self.node_connections[node_id]
-        writer.write(json.dumps(task_data).encode())
-        await writer.drain()
+        """Отправляет данные задачи узлу через уже установленное WebSocket соединение."""
+        websocket: WebSocketClientProtocol = self.node_connections[node_id]
+        await websocket.send(json.dumps(task_data))
         print(f"Задача {task_data['task_id']} отправлена узлу {node_id}")
 
-    async def push_task(self, task_id):
-        """Получает задачу по айди, распределяет и отправляет ее узлам"""
-        task_data = self.db.get_task(task_id)
-        if task_data:
-            task_distribution = self.scheduler.get_distribute_tasks({task_id: task_data})
-            for node_id, tasks in task_distribution.items():
-                for task_id, task_data in tasks.items():
-                    await self.dispatch_task_to_node(node_id, task_data)
-        else:
-            print(f"Задача с ID {task_id} не найдена.")
+    def push_tasks(self):
+        """Запрашивает распределение задач у планировщика и отправляет задачи узлам."""
+        task_distribution = self.scheduler.get_distribute_tasks()
+        for node_id, node_tasks in task_distribution.items():
+            for node_task_id in node_tasks:
+                task_data = self.db.set_node_for_task(node_task_id, node_id)
+                asyncio.run(self.dispatch_task_to_node(node_id, task_data))
 
-    # --- User (HTTP) ---
+    def get_task_data(self, task_id):
+        """Собирает необходимую информацию для выполнения задачи."""
+        # Получаем данные задачи из базы данных
+        task_data = {
+            "task_id": task_id,
+            "data": self.db.tasks_data.get(task_id, {})
+        }
+        print(f"Собраны данные для задачи {task_id}: {task_data}")
+        return task_data
 
     class RequestHandler(BaseHTTPRequestHandler):
         def do_POST(self):
-            """Принимает JSON с ID задачи, находит задачу и распределяет её по узлам."""
+            """Принимает JSON от пользователя, создает записи в таблице user_tasks и tasks, затем отправляет задачи."""
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
             task_info = json.loads(post_data.decode('utf-8'))
 
-            task_id = task_info.get("task_id")
-            master = self.server.master
+            command = task_info.get("command")
+            data_list = task_info.get("data", [])
 
-            # Проверяем, существует ли задача
-            task_data = master.db.get_task(task_id)
-            if not task_data:
-                self.send_response(404)
-                self.send_header("Content-type", "application/json")
-                self.end_headers()
-                response = {"status": "Task not found"}
-                self.wfile.write(json.dumps(response).encode())
-                return
+            # Создаем запись в таблице user_tasks
+            master = self.master
+            user_task_id = master.db.create_user_task(command)
 
-            # Передаем задачу в планировщик
-            asyncio.create_task(master.push_task(task_id))
+            # Создаем записи в таблице tasks для каждого элемента в data
+            for task_data in data_list:
+                node_task_id = master.db.create_node_task(user_task_id, task_data)
+                master.scheduler.push_task(node_task_id)
+
+            # Передаем задачи в планировщик
+            master.push_tasks()
 
             # Возвращаем ответ клиенту
             self.send_response(200)
             self.send_header("Content-type", "application/json")
             self.end_headers()
-            response = {"status": "Task distributed", "task_id": task_id}
+            response = {"status": "Tasks created and distributed", "user_task_id": user_task_id}
             self.wfile.write(json.dumps(response).encode())
 
     def start_http_server(self):
@@ -155,18 +141,12 @@ class Master:
         print("HTTP-сервер запущен на порту 8081")
         server.serve_forever()
 
-# Пример использования
+#
+# # Пример использования
 # node_ips = {1: "192.168.1.10", 2: "192.168.1.11"}
 # scheduler = Scheduler()
 # db = DB()
 # master = Master(scheduler, db, node_ips)
-
-
-# Запускаем асинхронные задачи для соединений и HTTP-сервер
-# async def main():
-#     await master.establish_connections()
-#     master.start_http_server()
-
-
-# Запуск основного асинхронного контекста
-# asyncio.run(main())
+#
+# # Запускаем HTTP-сервер
+# asyncio.run(master.start_http_server())
