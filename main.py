@@ -3,11 +3,7 @@ import os
 
 # Функция для получения всех файлов из папки
 def get_files_from_directory(directory_path):
-    """
-    Возвращает список всех файлов в указанной папке.
-    :param directory_path: Путь к папке.
-    :return: Список путей к файлам.
-    """
+    
     files = []
     try:
         for root, _, filenames in os.walk(directory_path):
