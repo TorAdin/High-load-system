@@ -1,7 +1,9 @@
+import psycopg2
 from psycopg2 import sql
 
 class DB:
-    def __init__(self):
+
+    def __init__(self, db_config):
         self.tasks = {}  # Таблица задач
         self.user_tasks = {}  # Таблица пользовательских задач
 
@@ -11,6 +13,7 @@ class DB:
     def get_db_connection(self):
         return psycopg2.connect(
             host=self.db_config['host'],
+            port=self.db_config['port'],
             database=self.db_config['database'],
             user=self.db_config['user'],
             password=self.db_config['password']
@@ -21,9 +24,9 @@ class DB:
         cursor = conn.cursor()
         try:
             # SQL-запрос для вставки новой записи в таблицу user_task
-            insert_query = sql.SQL("(command) RETURNING id;")
+            insert_query = sql.SQL("INSERT INTO user_tasks (task_command) VALUES (command) RETURNING id;")
             cursor.execute(insert_query, (command,))
-            
+
             user_task_id = cursor.fetchone()[0]  # Получаем ID созданной записи
             conn.commit()  # Подтверждаем изменения
             return user_task_id  # Возвращаем ID новой задачи
@@ -44,17 +47,17 @@ class DB:
 
 
 
-    if __name__ == "__main__":
+if __name__ == "__main__":
     db_config = {
         'host': '95.165.10.162',
-        'port': '5432'
+        'port': '5432',
         'database': 'yarik',
         'user': 'yarik',
         'password': 'yarik'
     }
     
     db = DB(db_config)
-    command = "INSERT  FROM user_tasks;"
+    command = "BARAVIKOV"
     user_task_id = db.create_user_task(command)
     if user_task_id:
         print(f"User  task created with ID: {user_task_id}")
