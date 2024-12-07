@@ -18,8 +18,7 @@ def prepare_json(data=None, files=None, user_code=None):
 
     # Формирование payload
     payload = {
-        "data": data if data else [],
-        "files": file_data,  # Список массивов: [название, содержимое]
+        "data": file_data,  # Список массивов: [название, содержимое]
         "user_code": user_code  # Передаём пользовательский код
     }
     return json.dumps(payload)

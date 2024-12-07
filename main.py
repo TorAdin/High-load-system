@@ -3,22 +3,22 @@ import os
 
 def get_files_from_directory(directory_path):
    
-    files = []
+    data = []
     try:
         for root, _, filenames in os.walk(directory_path):
             for filename in filenames:
                 file_path = os.path.join(root, filename)
                 if os.path.isfile(file_path):  # Проверяем, что это файл
-                    files.append(file_path)
+                    data.append(file_path)
     except Exception as e:
         print(f"Ошибка при чтении файлов из папки {directory_path}: {e}")
-    return files
+    return data
 
 
 # Выбор: данные вводятся пользователем или загружаются из файлов
 print("Выберите способ ввода данных:")
-print("2. Загрузить файл")
-print("3. Загрузить все файлы из папки")
+print("1. Загрузить файл")
+print("2. Загрузить все файлы из папки")
 
 choice = input("Ваш выбор (1/2): ")
 
