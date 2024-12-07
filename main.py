@@ -1,9 +1,8 @@
 from client import prepare_json, send_to_master_node
 import os
 
-# Функция для получения всех файлов из папки
 def get_files_from_directory(directory_path):
-    
+   
     files = []
     try:
         for root, _, filenames in os.walk(directory_path):
@@ -18,24 +17,16 @@ def get_files_from_directory(directory_path):
 
 # Выбор: данные вводятся пользователем или загружаются из файлов
 print("Выберите способ ввода данных:")
-print("1. Ввести данные вручную")
 print("2. Загрузить файл")
 print("3. Загрузить все файлы из папки")
 
-choice = input("Ваш выбор (1/2/3): ")
+choice = input("Ваш выбор (1/2): ")
 
 data = None
 file_paths = []
 
+
 if choice == "1":
-    # Ввод данных вручную
-    raw_data = input("Введите данные через запятую (например, 1, 2, 3):\n").strip()
-    if raw_data:
-        data = [int(x.strip()) for x in raw_data.split(",") if x.strip().isdigit()]
-    else:
-        print("Ошибка: Данные не введены. Завершаем программу.")
-        exit()
-elif choice == "2":
     # Ввод пути к файлу вручную
     file_path = input("Введите полный путь к файлу:\n").strip()
     if os.path.isfile(file_path):
@@ -43,7 +34,7 @@ elif choice == "2":
     else:
         print(f"Ошибка: Файл по пути '{file_path}' не найден.")
         exit()
-elif choice == "3":
+elif choice == "2":
     # Загрузка всех файлов из папки
     directory_path = input("Введите путь к папке:\n").strip()
     if os.path.isdir(directory_path):

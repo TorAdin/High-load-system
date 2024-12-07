@@ -9,17 +9,17 @@ def prepare_json(data=None, files=None, user_code=None):
         for file_path in files:
             try:
                 with open(file_path, 'r') as file:
-                    file_data.append({
-                        "file_name": os.path.basename(file_path),
-                        "content": file.read()
-                    })
+                    file_data.append([
+                        os.path.basename(file_path),  # Название файла
+                        file.read()  # Содержимое файла
+                    ])
             except Exception as e:
                 print(f"Ошибка при чтении файла {file_path}: {e}")
 
     # Формирование payload
     payload = {
         "data": data if data else [],
-        "files": file_data,
+        "files": file_data,  # Список массивов: [название, содержимое]
         "user_code": user_code  # Передаём пользовательский код
     }
     return json.dumps(payload)
