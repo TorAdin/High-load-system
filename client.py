@@ -2,8 +2,14 @@ import json
 import os
 import requests
 
-def prepare_json( data=None, files=None, user_code=None):
-    
+def prepare_json(data=None, files=None, user_code=None):
+    """
+    Формирует JSON с данными, файлами и пользовательским кодом.
+    :param data: Данные, введённые пользователем.
+    :param files: Список путей к файлам.
+    :param user_code: Пользовательский код.
+    :return: JSON-структура.
+    """
     file_data = []
     if files:
         for file_path in files:
@@ -16,6 +22,7 @@ def prepare_json( data=None, files=None, user_code=None):
             except Exception as e:
                 print(f"Ошибка при чтении файла {file_path}: {e}")
 
+    # Формирование payload
     payload = {
         "data": data if data else [],
         "files": file_data,
@@ -24,7 +31,12 @@ def prepare_json( data=None, files=None, user_code=None):
     return json.dumps(payload)
 
 def send_to_master_node(json_payload, master_node_url):
-   
+    """
+    Отправляет JSON на мастер-ноду.
+    :param json_payload: JSON-структура.
+    :param master_node_url: URL мастер-ноды.
+    :return: Ответ от мастер-ноды.
+    """
     headers = {"Content-Type": "application/json"}
     try:
         response = requests.post(master_node_url, data=json_payload, headers=headers)
