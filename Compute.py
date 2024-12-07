@@ -1,6 +1,6 @@
 import queue
 
-#класс вычислительной ноды
+#класс вычислительной ноды, как плейсхолдер
 class CalcNode:
     def __init__(self, id, busy):
         self.id = id
@@ -9,20 +9,22 @@ class CalcNode:
 
 
 class Task:
-    def __init__(self, id_task, name_task, data_task):
+    def __init__(self, id_task, name_task, data_id):
         self.id_task = id_task
-        self.status = 'accepted'
+        self.status = 'accepted' #busy #done
         self.name_task = name_task
-        self.data_task = data_task
+        self.data_id = data_id
         self.data_result = 0
 
     def calculate(self, data_task, func):
+        self.status = 'busy'
         self.data_result = func(data_task)
         QueueTask.history_info.append(QueueTask.arr_task.get())
+        self.status = 'done'
         CalcNode.qsize = QueueTask.arr_task.qsize()
 
     def get_result(self):
-        return {'id_task': self.id_task, 'name_task': self.name_task, 'data_task': self.data_task,
+        return {'id_task': self.id_task, 'data_id': self.data_id,
                 'data_result': self.data_result}
 
 
