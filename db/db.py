@@ -4,8 +4,6 @@ from psycopg2 import sql
 class DB:
 
     def __init__(self, db_config):
-        self.tasks = {}  # Таблица задач
-        self.user_tasks = {}  # Таблица пользовательских задач
 
         self.db_config = db_config  # Словарь с параметрами подключения к БД
         self.connection = self.get_db_connection()
@@ -24,7 +22,7 @@ class DB:
         cursor = conn.cursor()
         try:
             # SQL-запрос для вставки новой записи в таблицу user_task
-            insert_query = sql.SQL("INSERT INTO user_tasks (task_command) VALUES (command) RETURNING id;")
+            insert_query = sql.SQL("INSERT INTO user_tasks (task_command) VALUES (%s) RETURNING id;")
             cursor.execute(insert_query, (command,))
 
             user_task_id = cursor.fetchone()[0]  # Получаем ID созданной записи
@@ -40,11 +38,46 @@ class DB:
 
 
     def create_node_task(self, user_task_id, task_data):
-        pass
 
-    def update_node_task_result(self, task_id, result):
-        pass
+        conn = self.connection
+        cursor = conn.cursor()
+        try:
+            # SQL-запрос для вставки новой записи в таблицу node_task
+            insert_query = sql.SQL("INSERT INTO node_task (user_task_id, data) VALUES (%s, %s) RETURNING id;")
+            cursor.execute(insert_query, (user_task_id, task_data))
 
+            node_task_id = cursor.fetchone()[0]
+            conn.commit()
+            return node_task_id  # Возвращаем ID новой задачи
+
+        except Exception as e:
+            print(f"Error while creating user task: {e}")
+            conn.rollback()
+            return None
+        finally:
+            cursor.close()
+            conn.close()
+
+    def update_node_task_result(self, user_task_id, result):
+
+        conn = self.connection
+        cursor = conn.cursor()
+        try:
+            # SQL-запрос для вставки новой записи в таблицу node_task
+            update_query = sql.SQL("UPDATE node_task SET result = %s WHERE user_task_id = %s RETURNING id;")
+            cursor.execute(update_query, (result, user_task_id))
+
+            node_task_id = cursor.fetchone()[0]
+            conn.commit()
+            return node_task_id  # Возвращаем ID задачи
+
+        except Exception as e:
+            print(f"Error while creating user task: {e}")
+            conn.rollback()
+            return None
+        finally:
+            cursor.close()
+            conn.close()
 
 
 if __name__ == "__main__":
@@ -57,7 +90,18 @@ if __name__ == "__main__":
     }
     
     db = DB(db_config)
-    command = "BARAVIKOV"
-    user_task_id = db.create_user_task(command)
-    if user_task_id:
-        print(f"User  task created with ID: {user_task_id}")
+
+
+    """command = 'Test data 1'
+    result = 'Test_result_data 1'
+    # user_task_id = db.create_user_task(command)
+    # if user_task_id:
+    #     print(f"User  task created with ID: {user_task_id}")
+
+    node_task_id = db.create_node_task('3', command)
+    if node_task_id:
+        print(f"Node task created with ID: {node_task_id}")
+
+    result_task = db.update_node_task_result('3', result)
+    if result_task:
+        print(f"Node task created with ID: {result_task}")"""
