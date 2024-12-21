@@ -2,26 +2,33 @@ import json
 import os
 import requests
 
-def prepare_json(data=None, files=None, user_code=None):
-    
-    file_data = []
+def prepare_json(files=None, user_code=None):
+    names = []  # Список названий файлов
+    data = []  # Список данных из файлов
+
     if files:
         for file_path in files:
             try:
                 with open(file_path, 'r') as file:
-                    file_data.append([
-                        os.path.basename(file_path),  # Название файла
-                        file.read()  # Содержимое файла
-                    ])
+                    content = file.read()  # Чтение содержимого файла
+                    # Попробуем преобразовать содержимое в список чисел
+                    try:
+                        file_data = [float(value) for value in content.split()]
+                        names.append(os.path.basename(file_path))  # Добавляем название файла
+                        data.append(file_data)  # Добавляем числовые данные
+                    except ValueError:
+                        print(f"Файл {file_path} содержит нечисловые данные и будет пропущен.")
             except Exception as e:
                 print(f"Ошибка при чтении файла {file_path}: {e}")
 
     # Формирование payload
     payload = {
-        "data": file_data,  # Список массивов: [название, содержимое]
+        # "names": names,  # Названия файлов
+        "data": data,  # Числовые данные
         "user_code": user_code  # Передаём пользовательский код
     }
     return json.dumps(payload)
+
 
 def send_to_master_node(json_payload, master_node_url):
     
