@@ -1,5 +1,6 @@
 import psycopg2
 from psycopg2 import sql
+import time
 
 class DB:
 
@@ -17,7 +18,8 @@ class DB:
             password=self.db_config['password']
         )
     
-    def create_user_task(self, command):
+    # CREATE user_task IN TABLE user_tasks -> user_task_id
+    def create_user_task(self, command: str) -> int:
         conn = self.connection
         cursor = conn.cursor()
         try:
@@ -36,8 +38,8 @@ class DB:
             cursor.close()
             conn.close()
 
-
-    def create_node_task(self, user_task_id, task_data):
+    # CREATE NODE IN TABLE node_task -> node_task_id
+    def create_node_task(self, user_task_id: int, task_data: str) -> int:
 
         conn = self.connection
         cursor = conn.cursor()
@@ -51,14 +53,15 @@ class DB:
             return node_task_id  # Возвращаем ID новой задачи
 
         except Exception as e:
-            print(f"Error while creating user task: {e}")
+            print(f"Error while creating node_task: {e}")
             conn.rollback()
             return None
         finally:
             cursor.close()
             conn.close()
 
-    def update_node_task_result(self, user_task_id, result):
+    # UPDATE result IN TABLE node_task -> node_task_id
+    def update_node_task_result(self, user_task_id: int, result: str) -> int:
 
         conn = self.connection
         cursor = conn.cursor()
@@ -72,7 +75,52 @@ class DB:
             return node_task_id  # Возвращаем ID задачи
 
         except Exception as e:
-            print(f"Error while creating user task: {e}")
+            print(f"Error while updating result in node_task: {e}")
+            conn.rollback()
+            return None
+        finally:
+            cursor.close()
+            conn.close()
+
+    # UPDATE node_id IN TABLE node_task -> node_task_id
+    def update_node_task_node_id(self, user_task_id: int, node_id: int) -> int:
+
+        conn = self.connection
+        cursor = conn.cursor()
+        try:
+            # SQL-запрос для вставки новой записи в таблицу node_task
+            update_query = sql.SQL("UPDATE node_task SET node_id = %s WHERE user_task_id = %s RETURNING id;")
+            cursor.execute(update_query, (node_id, user_task_id))
+
+            node_task_id = cursor.fetchone()[0]
+            conn.commit()
+            return node_task_id  # Возвращаем ID задачи
+
+        except Exception as e:
+            print(f"Error while updating node_id in node_task: {e}")
+            conn.rollback()
+            return None
+        finally:
+            cursor.close()
+            conn.close()
+    
+    
+    # UPDATE STATUS(default planned -> awaits -> at_work -> completed) -> node_task_id
+    def update_node_task_status(self, user_task_id: int, status: str) -> int:
+
+        conn = self.connection
+        cursor = conn.cursor()
+        try:
+            # SQL-запрос для вставки новой записи в таблицу node_task
+            update_query = sql.SQL("UPDATE node_task SET status = %s WHERE user_task_id = %s RETURNING id;")
+            cursor.execute(update_query, (status, user_task_id))
+
+            node_task_id = cursor.fetchone()[0]
+            conn.commit()
+            return node_task_id  # Возвращаем ID задачи
+
+        except Exception as e:
+            print(f"Error while updating status in node_task: {e}")
             conn.rollback()
             return None
         finally:
@@ -90,18 +138,20 @@ if __name__ == "__main__":
     }
     
     db = DB(db_config)
+    '''
+    command = 'test data 5'
+    data = 'Test data 4'
+    result = 'Test_result_data 2'
 
+    user_task_id = db.create_user_task(command)
+    print(f"User  task created with ID: {user_task_id}")
+    
 
-    """command = 'Test data 1'
-    result = 'Test_result_data 1'
-    # user_task_id = db.create_user_task(command)
-    # if user_task_id:
-    #     print(f"User  task created with ID: {user_task_id}")
+    print(f"Node task created with ID: {db.create_node_task(6, data)}")
 
-    node_task_id = db.create_node_task('3', command)
-    if node_task_id:
-        print(f"Node task created with ID: {node_task_id}")
-
-    result_task = db.update_node_task_result('3', result)
-    if result_task:
-        print(f"Node task created with ID: {result_task}")"""
+    print(f"Node result updated with ID: {db.update_node_task_result(user_task_id, result)}")
+    
+    print(f"Node task_id updated with ID: {db.update_node_task_node_id(3, 20)}")
+    
+    print(f"Node task_id updated with ID: {db.update_node_task_status(3, 'at_work')}")
+    '''
